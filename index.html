@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>ToDo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 1rem;
+        }
+
+        input[type="text"], textarea, select {
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input[type="datetime-local"] {
+            padding: 0.7rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input[type="text"]:focus, textarea:focus, select:focus, input[type="datetime-local"]:focus {
+            outline: none;
+            border-color: #2196f3;
+        }
+
+        .buttons-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        button {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #1976d2;
+        }
+
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            background: #f8f8f8;
+            margin-bottom: 0.5rem;
+            border-radius: 6px;
+            cursor: move;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 5px solid #ccc;
+        }
+
+        .todo-item.priority-high {
+            border-left-color: #f44336;
+        }
+
+        .todo-item.priority-medium {
+            border-left-color: #ff9800;
+        }
+
+        .todo-item.priority-low {
+            border-left-color: #4caf50;
+        }
+
+        .todo-item:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .todo-item.dragging {
+            opacity: 0.5;
+            background: #e3f2fd;
+        }
+
+        .todo-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .todo-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            flex: 1;
+        }
+
+        .todo-title {
+            font-weight: bold;
+        }
+
+        .todo-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .deadline {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .deadline.urgent {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .todo-item input[type="checkbox"] {
+            margin-right: 1rem;
+            width: 20px;
+            height: 20px;
+        }
+
+        .todo-description {
+            margin-left: 2.5rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .todo-item.completed .todo-header {
+            opacity: 0.7;
+            text-decoration: line-through;
+        }
+
+        .todo-item .delete-btn {
+            margin-left: auto;
+            background: #ff5252;
+            padding: 0.4rem 0.8rem;
+        }
+
+        .todo-item .delete-btn:hover {
+            background: #d32f2f;
+        }
+
+        .drag-handle {
+            cursor: move;
+            padding: 0.5rem;
+            margin-right: 0.5rem;
+            color: #666;
+        }
+
+        .drag-handle:hover {
+            color: #333;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            margin-top: 2rem;
+        }
+
+        .priority-badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            color: white;
+        }
+
+        .priority-badge.high {
+            background-color: #f44336;
+        }
+
+        .priority-badge.medium {
+            background-color: #ff9800;
+        }
+
+        .priority-badge.low {
+            background-color: #4caf50;
+        }
+        .file-input-wrapper {
+            margin-top: 0.5rem;
+        }
+
+        .file-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .file-item {
+            position: relative;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0.5rem;
+            max-width: 200px;
+        }
+
+        .file-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+
+        .file-item .remove-file {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff5252;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            padding: 0;
+        }
+
+        .file-name {
+            font-size: 0.8rem;
+            color: #666;
+            word-break: break-word;
+            margin-top: 0.25rem;
+        }
+
+        .attachments-section {
+            margin-left: 2.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .max-size-warning {
+            color: #f44336;
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        .attachment-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .attachment {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            background: #f1f1f1;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .attachment-icon {
+            font-size: 1.2rem;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 0.8rem;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 2rem;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Ajout d'un effet de verre */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .todo-item {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            padding: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 5px solid #ccc;
+        }
+
+        .todo-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 700px;
+            margin: 2rem auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #444;
+        }
+
+        .modal-description {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
+
+        .modal-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        .modal-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+
+        .todo-item {
+            cursor: pointer;
+        }
+
+        /* Amélioration des styles précédents pour une meilleure cohérence */
+        .todo-item:hover {
+            transform: translateX(5px) scale(1.01);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-attachments {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .modal .file-item {
+            max-width: none;
+        }
+
+        .click-hint {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .todo-item:hover .click-hint {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Todo List</h1>
+        <div class="input-group">
+            <input type="text" id="todo-input" placeholder="Titre de la tâche...">
+            <textarea id="todo-description" placeholder="Description de la tâche (optionnel)..."></textarea>
+            <div class="file-input-wrapper">
+                <input type="file" id="todo-attachments" multiple accept="image/*,.pdf,.doc,.docx,.txt">
+                <div id="file-preview" class="file-preview"></div>
+                <div id="max-size-warning" class="max-size-warning"></div>
+            </div>
+            <div class="input-row">
+                <select id="todo-priority">
+                    <option value="low">Priorité basse</option>
+                    <option value="medium">Priorité moyenne</option>
+                    <option value="high">Priorité haute</option>
+                </select>
+                <input type="datetime-local" id="todo-deadline">
+            </div>
+            <div class="buttons-group">
+                <button id="add-btn">Ajouter</button>
+            </div>
+        </div>
+        <ul id="todo-list" class="todo-list"></ul>
+        <p id="empty-state" class="empty-state">Aucune tâche pour le moment</p>
+    </div>
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title"></h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const todoInput = document.getElementById('todo-input');
+        const todoDescription = document.getElementById('todo-description');
+        const todoPriority = document.getElementById('todo-priority');
+        const todoDeadline = document.getElementById('todo-deadline');
+        const addBtn = document.getElementById('add-btn');
+        const todoList = document.getElementById('todo-list');
+        const emptyState = document.getElementById('empty-state');
+        const todoAttachments = document.getElementById('todo-attachments');
+        const filePreview = document.getElementById('file-preview');
+        const maxSizeWarning = document.getElementById('max-size-warning');
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB maximum par fichier
+
+        let currentFiles = [];
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            else return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        todoAttachments.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            currentFiles = [];
+            filePreview.innerHTML = '';
+            maxSizeWarning.innerHTML = '';
+
+            for (const file of files) {
+                if (file.size > MAX_FILE_SIZE) {
+                    maxSizeWarning.textContent = `Le fichier "${file.name}" dépasse la taille maximale de 5MB`;
+                    continue;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const fileData = {
+                        name: file.name,
+                        type: file.type,
+                        size: file.size,
+                        data: e.target.result
+                    };
+                    currentFiles.push(fileData);
+
+                    const fileElement = document.createElement('div');
+                    fileElement.className = 'file-item';
+
+                    if (file.type.startsWith('image/')) {
+                        fileElement.innerHTML = `
+                            <img src="${e.target.result}" alt="${file.name}">
+                            <div class="file-name">${file.name} (${formatFileSize(file.size)})</div>
+                            <button class="remove-file" data-index="${currentFiles.length - 1}">×</button>
+                        `;
+                    } else {
+                        fileElement.innerHTML = `
+                            <div class="attachment">
+                                <span class="attachment-icon">📎</span>
+                                <span class="file-name">${file.name}</span>
+                                <span class="file-size">(${formatFileSize(file.size)})</span>
+                            </div>
+                            <button class="remove-file" data-index="${currentFiles.length - 1}">×</button>
+                        `;
+                    }
+
+                    filePreview.appendChild(fileElement);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        filePreview.addEventListener('click', (e) => {
+            if (e.target.classList.contains('remove-file')) {
+                const index = parseInt(e.target.dataset.index);
+                currentFiles.splice(index, 1);
+                renderFilePreview();
+            }
+        });
+
+        function renderFilePreview() {
+            filePreview.innerHTML = '';
+            currentFiles.forEach((file, index) => {
+                const fileElement = document.createElement('div');
+                fileElement.className = 'file-item';
+
+                if (file.type.startsWith('image/')) {
+                    fileElement.innerHTML = `
+                        <img src="${file.data}" alt="${file.name}">
+                        <div class="file-name">${file.name} (${formatFileSize(file.size)})</div>
+                        <button class="remove-file" data-index="${index}">×</button>
+                    `;
+                } else {
+                    fileElement.innerHTML = `
+                        <div class="attachment">
+                            <span class="attachment-icon">📎</span>
+                            <span class="file-name">${file.name}</span>
+                            <span class="file-size">(${formatFileSize(file.size)})</span>
+                        </div>
+                        <button class="remove-file" data-index="${index}">×</button>
+                    `;
+                }
+
+                filePreview.appendChild(fileElement);
+            });
+        }
+
+        function addTodo() {
+            const text = todoInput.value.trim();
+            const description = todoDescription.value.trim();
+            const priority = todoPriority.value;
+            const deadline = todoDeadline.value;
+            
+            if (text) {
+                todos.push({ 
+                    text,
+                    description,
+                    priority,
+                    deadline,
+                    completed: false,
+                    attachments: currentFiles
+                });
+                todoInput.value = '';
+                todoDescription.value = '';
+                todoPriority.value = 'low';
+                todoDeadline.value = '';
+                currentFiles = [];
+                filePreview.innerHTML = '';
+                updateLocalStorage();
+                renderTodos();
+            }
+        }
+
+        function renderTodos() {
+            todoList.innerHTML = '';
+            emptyState.style.display = todos.length ? 'none' : 'block';
+
+            todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${todo.completed ? 'completed' : ''} priority-${todo.priority}`;
+                li.draggable = true;
+                
+                const deadlineFormatted = formatDate(todo.deadline);
+                const isUrgentTask = isUrgent(todo.deadline);
+                const isPastDueTask = isPastDue(todo.deadline);
+                
+                let attachmentsHTML = '';
+                if (todo.attachments && todo.attachments.length > 0) {
+                    attachmentsHTML = `
+                        <div class="attachments-section">
+                            <div class="attachment-preview">
+                                ${todo.attachments.map(file => {
+                                    if (file.type.startsWith('image/')) {
+                                        return `
+                                            <div class="file-item">
+                                                <img src="${file.data}" alt="${file.name}">
+                                                <div class="file-name">${file.name} (${formatFileSize(file.size)})</div>
+                                            </div>
+                                        `;
+                                    } else {
+                                        return `
+                                            <div class="attachment">
+                                                <span class="attachment-icon">📎</span>
+                                                <span class="file-name">${file.name}</span>
+                                                <span class="file-size">(${formatFileSize(file.size)})</span>
+                                            </div>
+                                        `;
+                                    }
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                li.innerHTML = `
+                    <div class="todo-header">
+                        <span class="drag-handle">☰</span>
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''}>
+                        <div class="todo-info">
+                            <span class="todo-title">${todo.text}</span>
+                            <div class="todo-meta">
+                                <span class="priority-badge ${todo.priority}">${
+                                    todo.priority === 'high' ? 'Haute' :
+                                    todo.priority === 'medium' ? 'Moyenne' : 'Basse'
+                                }</span>
+                                ${todo.deadline ? `
+                                    <span class="deadline ${isUrgentTask ? 'urgent' : ''} ${isPastDueTask ? 'urgent' : ''}">
+                                        ${isPastDueTask ? '⚠️ En retard' : isUrgentTask ? '⏰ Urgent' : '📅'} 
+                                        ${deadlineFormatted}
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <button class="delete-btn">Supprimer</button>
+                    </div>
+                    ${todo.description ? `<div class="todo-description">${todo.description}</div>` : ''}
+                    ${attachmentsHTML}
+                `;
+
+                // Ajout des event listeners comme avant...
+                // Code des event listeners maintenu
+
+                todoList.appendChild(li);
+            });
+        }
+
+        let todos = JSON.parse(localStorage.getItem('todos')) || [];
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleString('fr-FR', { 
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function isUrgent(deadline) {
+            if (!deadline) return false;
+            const now = new Date();
+            const deadlineDate = new Date(deadline);
+            const diffHours = (deadlineDate - now) / (1000 * 60 * 60);
+            return diffHours < 24 && diffHours > 0;
+        }
+
+        function isPastDue(deadline) {
+            if (!deadline) return false;
+            const now = new Date();
+            const deadlineDate = new Date(deadline);
+            return deadlineDate < now;
+        }
+
+        function updateLocalStorage() {
+            localStorage.setItem('todos', JSON.stringify(todos));
+        }
+
+        function renderTodos() {
+            todoList.innerHTML = '';
+            emptyState.style.display = todos.length ? 'none' : 'block';
+
+            todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${todo.completed ? 'completed' : ''} priority-${todo.priority}`;
+                li.draggable = true;
+                
+                const deadlineFormatted = formatDate(todo.deadline);
+                const isUrgentTask = isUrgent(todo.deadline);
+                const isPastDueTask = isPastDue(todo.deadline);
+                
+                li.innerHTML = `
+                    <div class="todo-header">
+                        <span class="drag-handle">☰</span>
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''}>
+                        <div class="todo-info">
+                            <span class="todo-title">${todo.text}</span>
+                            <div class="todo-meta">
+                                <span class="priority-badge ${todo.priority}">${
+                                    todo.priority === 'high' ? 'Haute' :
+                                    todo.priority === 'medium' ? 'Moyenne' : 'Basse'
+                                }</span>
+                                ${todo.deadline ? `
+                                    <span class="deadline ${isUrgentTask ? 'urgent' : ''} ${isPastDueTask ? 'urgent' : ''}">
+                                        ${isPastDueTask ? '⚠️ En retard' : isUrgentTask ? '⏰ Urgent' : '📅'} 
+                                        ${deadlineFormatted}
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <button class="delete-btn">Supprimer</button>
+                    </div>
+                    ${todo.description ? `<div class="todo-description">${todo.description}</div>` : ''}
+                `;
+
+                const checkbox = li.querySelector('input');
+                checkbox.addEventListener('change', () => toggleTodo(index));
+
+                const deleteBtn = li.querySelector('.delete-btn');
+                deleteBtn.addEventListener('click', () => deleteTodo(index));
+
+                li.addEventListener('dragstart', (e) => {
+                    li.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', index);
+                });
+
+                li.addEventListener('dragend', () => {
+                    li.classList.remove('dragging');
+                });
+
+                li.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+
+                li.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                    const toIndex = index;
+                    
+                    if (fromIndex !== toIndex) {
+                        const item = todos[fromIndex];
+                        todos.splice(fromIndex, 1);
+                        todos.splice(toIndex, 0, item);
+                        updateLocalStorage();
+                        renderTodos();
+                    }
+                });
+
+                todoList.appendChild(li);
+            });
+        }
+
+        function addTodo() {
+            const text = todoInput.value.trim();
+            const description = todoDescription.value.trim();
+            const priority = todoPriority.value;
+            const deadline = todoDeadline.value;
+            
+            if (text) {
+                todos.push({ 
+                    text,
+                    description,
+                    priority,
+                    deadline,
+                    completed: false 
+                });
+                todoInput.value = '';
+                todoDescription.value = '';
+                todoPriority.value = 'low';
+                todoDeadline.value = '';
+                updateLocalStorage();
+                renderTodos();
+            }
+        }
+
+        function toggleTodo(index) {
+            todos[index].completed = !todos[index].completed;
+            updateLocalStorage();
+            renderTodos();
+        }
+
+        function deleteTodo(index) {
+            todos.splice(index, 1);
+            updateLocalStorage();
+            renderTodos();
+        }
+
+        addBtn.addEventListener('click', addTodo);
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                addTodo();
+            }
+        });
+
+        // Afficher les todos au chargement
+        renderTodos();
+        const modal = document.getElementById('task-modal');
+
+        function showTaskDetails(todo) {
+            const modalTitle = modal.querySelector('.modal-title');
+            const modalBody = modal.querySelector('.modal-body');
+
+            modalTitle.textContent = todo.text;
+
+            const deadlineFormatted = todo.deadline ? formatDate(todo.deadline) : 'Aucune date limite';
+            const isUrgentTask = isUrgent(todo.deadline);
+            const isPastDueTask = isPastDue(todo.deadline);
+
+            modalBody.innerHTML = `
+                <div class="modal-section">
+                    <div class="modal-meta">
+                        <div class="modal-meta-item">
+                            <span class="priority-badge ${todo.priority}">
+                                ${todo.priority === 'high' ? 'Haute' : 
+                                  todo.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                            </span>
+                        </div>
+                        <div class="modal-meta-item">
+                            <span class="deadline ${isUrgentTask ? 'urgent' : ''} ${isPastDueTask ? 'urgent' : ''}">
+                                ${isPastDueTask ? '⚠️ En retard' : isUrgentTask ? '⏰ Urgent' : '📅'}
+                                ${deadlineFormatted}
+                            </span>
+                        </div>
+                        <div class="modal-meta-item">
+                            <span>État: ${todo.completed ? '✅ Terminé' : '🔄 En cours'}</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${todo.description ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">Description</div>
+                        <div class="modal-description">${todo.description}</div>
+                    </div>
+                ` : ''}
+
+                ${todo.attachments && todo.attachments.length > 0 ? `
+                    <div class="modal-section">
+                        <div class="modal-section-title">Pièces jointes</div>
+                        <div class="modal-attachments">
+                            ${todo.attachments.map(file => {
+                                if (file.type.startsWith('image/')) {
+                                    return `
+                                        <div class="file-item">
+                                            <img src="${file.data}" alt="${file.name}">
+                                            <div class="file-name">${file.name} (${formatFileSize(file.size)})</div>
+                                        </div>
+                                    `;
+                                } else {
+                                    return `
+                                        <div class="attachment">
+                                            <span class="attachment-icon">📎</span>
+                                            <span class="file-name">${file.name}</span>
+                                            <span class="file-size">(${formatFileSize(file.size)})</span>
+                                        </div>
+                                    `;
+                                }
+                            }).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        // Fermeture du modal
+        modal.querySelector('.close-modal').addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Mise à jour du rendu des tâches pour ajouter l'interaction
+        function renderTodos() {
+            todoList.innerHTML = '';
+            emptyState.style.display = todos.length ? 'none' : 'block';
+
+            todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${todo.completed ? 'completed' : ''} priority-${todo.priority}`;
+                li.draggable = true;
+                
+                // Contenu précédent maintenu...
+                // Ajout d'un indicateur de clic
+                const deadline = formatDate(todo.deadline);
+                const isUrgentTask = isUrgent(todo.deadline);
+                const isPastDueTask = isPastDue(todo.deadline);
+
+                li.innerHTML = `
+                    <div class="todo-header">
+                        <span class="drag-handle">☰</span>
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''}>
+                        <div class="todo-info">
+                            <span class="todo-title">${todo.text}</span>
+                            <div class="todo-meta">
+                                <span class="priority-badge ${todo.priority}">
+                                    ${todo.priority === 'high' ? 'Haute' :
+                                      todo.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                                </span>
+                                ${todo.deadline ? `
+                                    <span class="deadline ${isUrgentTask ? 'urgent' : ''} ${isPastDueTask ? 'urgent' : ''}">
+                                        ${isPastDueTask ? '⚠️ En retard' : isUrgentTask ? '⏰ Urgent' : '📅'}
+                                        ${deadline}
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <button class="delete-btn">Supprimer</button>
+                    </div>
+                    ${todo.description ? `<div class="todo-description">${todo.description.substring(0, 100)}${todo.description.length > 100 ? '...' : ''}</div>` : ''}
+                    ${todo.attachments && todo.attachments.length > 0 ? `
+                        <div class="attachments-section">
+                            <div class="attachment-preview">
+                                ${todo.attachments.slice(0, 2).map(file => {
+                                    if (file.type.startsWith('image/')) {
+                                        return `
+                                            <div class="file-item">
+                                                <img src="${file.data}" alt="${file.name}">
+                                                <div class="file-name">${file.name}</div>
+                                            </div>
+                                        `;
+                                    } else {
+                                        return `
+                                            <div class="attachment">
+                                                <span class="attachment-icon">📎</span>
+                                                <span class="file-name">${file.name}</span>
+                                            </div>
+                                        `;
+                                    }
+                                }).join('')}
+                                ${todo.attachments.length > 2 ? `
+                                    <div class="attachment">
+                                        <span>+${todo.attachments.length - 2} plus</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    ` : ''}
+                `;
+
+                // Event listeners précédents maintenus...
+                const checkbox = li.querySelector('input[type="checkbox"]');
+                const deleteBtn = li.querySelector('.delete-btn');
+                const dragHandle = li.querySelector('.drag-handle');
+
+                // Éviter que le clic sur les contrôles n'ouvre le modal
+                [checkbox, deleteBtn, dragHandle].forEach(element => {
+                    element.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                });
+
+                checkbox.addEventListener('change', () => toggleTodo(index));
+                deleteBtn.addEventListener('click', () => deleteTodo(index));
+
+                // Gestion du drag and drop maintenue...
+                li.addEventListener('dragstart', (e) => {
+                    li.classList.add('dragging');
+                    e.dataTransfer.setData('text/plain', index);
+                });
+
+                li.addEventListener('dragend', () => {
+                    li.classList.remove('dragging');
+                });
+
+                li.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+
+                li.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                    const toIndex = index;
+                    
+                    if (fromIndex !== toIndex) {
+                        const item = todos[fromIndex];
+                        todos.splice(fromIndex, 1);
+                        todos.splice(toIndex, 0, item);
+                        updateLocalStorage();
+                        renderTodos();
+                    }
+                });
+
+                // Ajout de l'événement de clic pour afficher les détails
+                li.addEventListener('click', () => showTaskDetails(todo));
+
+                todoList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
